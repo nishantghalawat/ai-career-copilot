@@ -1,42 +1,113 @@
 import { useState } from "react";
 import "./App.css";
 
-const API_URL = "https://ai-career-copilot-lrxf.onrender.com";
+// ======================================================
+// API CONFIG
+// ======================================================
+
+// Vercel Environment Variable:
+// VITE_API_URL=https://ai-career-copilot-lrxf.onrender.com
+
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://ai-career-copilot-lrxf.onrender.com";
+
+// Remove trailing slash if accidentally added
+const BASE_URL = API_URL.replace(/\/+$/, "");
+
+// ======================================================
+// APP
+// ======================================================
 
 function App() {
   const [activePage, setActivePage] = useState("dashboard");
 
-  // =========================
+  // ======================================================
+  // SAFE API HELPER
+  // ======================================================
+
+  const apiRequest = async (endpoint, options = {}) => {
+    try {
+      const response = await fetch(
+        `${BASE_URL}${endpoint}`,
+        options
+      );
+
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+          `Server error (${response.status})`
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.error("API Error:", error);
+
+      if (error instanceof TypeError) {
+        throw new Error(
+          "Unable to connect to the backend. Please check the deployed backend and CORS settings."
+        );
+      }
+
+      throw error;
+    }
+  };
+
+  // ======================================================
   // RESUME
-  // =========================
+  // ======================================================
 
   const [resumeFile, setResumeFile] = useState(null);
-  const [targetRole, setTargetRole] = useState("AI Product Manager");
-  const [experience, setExperience] = useState("Fresher");
-  const [resumeResult, setResumeResult] = useState(null);
-  const [resumeLoading, setResumeLoading] = useState(false);
+  const [targetRole, setTargetRole] =
+    useState("AI Product Manager");
+  const [experience, setExperience] =
+    useState("Fresher");
+  const [resumeResult, setResumeResult] =
+    useState(null);
+  const [resumeLoading, setResumeLoading] =
+    useState(false);
 
-  // =========================
+  // ======================================================
   // SKILL GAP
-  // =========================
+  // ======================================================
 
-  const [currentSkills, setCurrentSkills] = useState([]);
-  const [newSkill, setNewSkill] = useState("");
+  const [currentSkills, setCurrentSkills] =
+    useState([]);
+
+  const [newSkill, setNewSkill] =
+    useState("");
+
   const [skillGapRole, setSkillGapRole] =
     useState("AI Product Manager");
-  const [skillGapResult, setSkillGapResult] = useState(null);
-  const [skillGapLoading, setSkillGapLoading] = useState(false);
 
-  // =========================
+  const [skillGapResult, setSkillGapResult] =
+    useState(null);
+
+  const [skillGapLoading, setSkillGapLoading] =
+    useState(false);
+
+  // ======================================================
   // ROADMAP
-  // =========================
+  // ======================================================
 
-  const [roadmapResult, setRoadmapResult] = useState(null);
-  const [roadmapLoading, setRoadmapLoading] = useState(false);
+  const [roadmapResult, setRoadmapResult] =
+    useState(null);
 
-  // =========================
+  const [roadmapLoading, setRoadmapLoading] =
+    useState(false);
+
+  // ======================================================
   // INTERVIEW
-  // =========================
+  // ======================================================
 
   const [interviewRole, setInterviewRole] =
     useState("AI Product Manager");
@@ -53,7 +124,8 @@ function App() {
   const [currentQuestionIndex, setCurrentQuestionIndex] =
     useState(0);
 
-  const [userAnswer, setUserAnswer] = useState("");
+  const [userAnswer, setUserAnswer] =
+    useState("");
 
   const [evaluationResult, setEvaluationResult] =
     useState(null);
@@ -61,48 +133,51 @@ function App() {
   const [evaluationLoading, setEvaluationLoading] =
     useState(false);
 
-  const [interviewScores, setInterviewScores] = useState([]);
+  const [interviewScores, setInterviewScores] =
+    useState([]);
 
-  // =========================
+  // ======================================================
   // PROGRESS
-  // =========================
+  // ======================================================
 
-  const [skillProgress, setSkillProgress] = useState(() => {
-    try {
-      return JSON.parse(
-        localStorage.getItem(
-          "careerCopilotProgress"
-        ) || "{}"
-      );
-    } catch {
-      return {};
-    }
-  });
+  const [skillProgress, setSkillProgress] =
+    useState(() => {
+      try {
+        return JSON.parse(
+          localStorage.getItem(
+            "careerCopilotProgress"
+          ) || "{}"
+        );
+      } catch {
+        return {};
+      }
+    });
 
-  // =========================
+  // ======================================================
   // PROFILE
-  // =========================
+  // ======================================================
 
-  const [profile, setProfile] = useState(() => {
-    try {
-      return JSON.parse(
-        localStorage.getItem(
-          "careerCopilotProfile"
-        ) ||
-        '{"name":"","role":"AI Product Manager","experience":"Fresher"}'
-      );
-    } catch {
-      return {
-        name: "",
-        role: "AI Product Manager",
-        experience: "Fresher",
-      };
-    }
-  });
+  const [profile, setProfile] =
+    useState(() => {
+      try {
+        return JSON.parse(
+          localStorage.getItem(
+            "careerCopilotProfile"
+          ) ||
+          '{"name":"","role":"AI Product Manager","experience":"Fresher"}'
+        );
+      } catch {
+        return {
+          name: "",
+          role: "AI Product Manager",
+          experience: "Fresher",
+        };
+      }
+    });
 
-  // =========================
-  // DASHBOARD
-  // =========================
+  // ======================================================
+  // DASHBOARD FEATURES
+  // ======================================================
 
   const features = [
     {
@@ -135,9 +210,9 @@ function App() {
     },
   ];
 
-  // =========================
+  // ======================================================
   // SAFE HELPERS
-  // =========================
+  // ======================================================
 
   const getText = (value) => {
     if (
@@ -147,7 +222,10 @@ function App() {
       return String(value);
     }
 
-    if (value && typeof value === "object") {
+    if (
+      value &&
+      typeof value === "object"
+    ) {
       return (
         value.text ||
         value.name ||
@@ -172,7 +250,10 @@ function App() {
       return String(skill);
     }
 
-    if (skill && typeof skill === "object") {
+    if (
+      skill &&
+      typeof skill === "object"
+    ) {
       return (
         skill.name ||
         skill.skill ||
@@ -186,7 +267,10 @@ function App() {
   };
 
   const getPriority = (item) => {
-    if (item && typeof item === "object") {
+    if (
+      item &&
+      typeof item === "object"
+    ) {
       return item.priority || "Medium";
     }
 
@@ -194,7 +278,10 @@ function App() {
   };
 
   const getReason = (item) => {
-    if (item && typeof item === "object") {
+    if (
+      item &&
+      typeof item === "object"
+    ) {
       return (
         item.reason ||
         item.description ||
@@ -207,11 +294,16 @@ function App() {
   };
 
   const getQuestionText = (question) => {
-    if (typeof question === "string") {
+    if (
+      typeof question === "string"
+    ) {
       return question;
     }
 
-    if (question && typeof question === "object") {
+    if (
+      question &&
+      typeof question === "object"
+    ) {
       return (
         question.question ||
         question.text ||
@@ -223,13 +315,15 @@ function App() {
     return "";
   };
 
-  // =========================
+  // ======================================================
   // RESUME ANALYSIS
-  // =========================
+  // ======================================================
 
   const analyzeResume = async () => {
     if (!resumeFile) {
-      alert("Please upload your resume first.");
+      alert(
+        "Please upload your resume first."
+      );
       return;
     }
 
@@ -238,33 +332,43 @@ function App() {
 
       const formData = new FormData();
 
-      formData.append("resume", resumeFile);
-      formData.append("targetRole", targetRole);
-      formData.append("experience", experience);
+      formData.append(
+        "resume",
+        resumeFile
+      );
 
-      const response = await fetch(
-        `${API_URL}/api/analyze-resume`,
+      formData.append(
+        "targetRole",
+        targetRole
+      );
+
+      formData.append(
+        "experience",
+        experience
+      );
+
+      const data = await apiRequest(
+        "/api/analyze-resume",
         {
           method: "POST",
           body: formData,
         }
       );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-          "Failed to analyze resume."
-        );
-      }
-
       setResumeResult(data);
 
       setSkillGapResult(null);
       setRoadmapResult(null);
     } catch (error) {
-      alert(error.message);
+      console.error(
+        "Resume analysis error:",
+        error
+      );
+
+      alert(
+        error.message ||
+        "Failed to analyze resume."
+      );
     } finally {
       setResumeLoading(false);
     }
@@ -275,27 +379,34 @@ function App() {
     setResumeResult(null);
   };
 
-  // =========================
+  // ======================================================
   // RESUME → SKILL GAP
-  // =========================
+  // ======================================================
 
   const goToSkillGapFromResume = () => {
     if (!resumeResult) return;
 
-    const detectedSkills = Array.isArray(
-      resumeResult.detectedSkills
-    )
-      ? resumeResult.detectedSkills
-        .map((skill) => getSkillName(skill))
-        .filter(Boolean)
-      : [];
+    const detectedSkills =
+      Array.isArray(
+        resumeResult.detectedSkills
+      )
+        ? resumeResult.detectedSkills
+          .map((skill) =>
+            getSkillName(skill)
+          )
+          .filter(Boolean)
+        : [];
 
-    setCurrentSkills(detectedSkills);
+    setCurrentSkills(
+      detectedSkills
+    );
 
     setSkillGapRole(
-      typeof resumeResult.targetRole === "string"
+      typeof resumeResult.targetRole ===
+        "string"
         ? resumeResult.targetRole
-        : targetRole || "AI Product Manager"
+        : targetRole ||
+        "AI Product Manager"
     );
 
     setSkillGapResult(null);
@@ -304,345 +415,440 @@ function App() {
     setActivePage("skills");
   };
 
-  // =========================
+  // ======================================================
   // SKILL GAP
-  // =========================
+  // ======================================================
 
   const addSkill = () => {
-    const skill = newSkill.trim();
+    const skill =
+      newSkill.trim();
 
     if (!skill) return;
 
-    const exists = currentSkills.some(
-      (item) =>
-        getSkillName(item).toLowerCase() ===
-        skill.toLowerCase()
-    );
+    const exists =
+      currentSkills.some(
+        (item) =>
+          getSkillName(
+            item
+          ).toLowerCase() ===
+          skill.toLowerCase()
+      );
 
     if (exists) {
       setNewSkill("");
       return;
     }
 
-    setCurrentSkills((previous) => [
-      ...previous,
-      skill,
-    ]);
+    setCurrentSkills(
+      (previous) => [
+        ...previous,
+        skill,
+      ]
+    );
 
     setNewSkill("");
   };
 
-  const removeSkill = (skillToRemove) => {
-    const name = getSkillName(skillToRemove);
+  const removeSkill = (
+    skillToRemove
+  ) => {
+    const name =
+      getSkillName(
+        skillToRemove
+      );
 
-    setCurrentSkills((previous) =>
-      previous.filter(
-        (skill) =>
-          getSkillName(skill) !== name
-      )
+    setCurrentSkills(
+      (previous) =>
+        previous.filter(
+          (skill) =>
+            getSkillName(
+              skill
+            ) !== name
+        )
     );
   };
 
-  const analyzeSkillGap = async () => {
-    if (currentSkills.length === 0) {
-      alert(
-        "Please add at least one current skill."
-      );
-      return;
-    }
-
-    try {
-      setSkillGapLoading(true);
-
-      const cleanSkills = currentSkills
-        .map((skill) => getSkillName(skill))
-        .filter(Boolean);
-
-      const response = await fetch(
-        `${API_URL}/api/skill-gap`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            targetRole: skillGapRole,
-            currentSkills: cleanSkills,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-          "Failed to analyze skill gap."
+  const analyzeSkillGap =
+    async () => {
+      if (
+        currentSkills.length ===
+        0
+      ) {
+        alert(
+          "Please add at least one current skill."
         );
+        return;
       }
 
-      setSkillGapResult(data);
-      setRoadmapResult(null);
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setSkillGapLoading(false);
-    }
-  };
+      try {
+        setSkillGapLoading(
+          true
+        );
+
+        const cleanSkills =
+          currentSkills
+            .map((skill) =>
+              getSkillName(skill)
+            )
+            .filter(Boolean);
+
+        const data =
+          await apiRequest(
+            "/api/skill-gap",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                targetRole:
+                  skillGapRole,
+                currentSkills:
+                  cleanSkills,
+              }),
+            }
+          );
+
+        setSkillGapResult(
+          data
+        );
+
+        setRoadmapResult(
+          null
+        );
+      } catch (error) {
+        console.error(
+          "Skill gap error:",
+          error
+        );
+
+        alert(
+          error.message ||
+          "Failed to analyze skill gap."
+        );
+      } finally {
+        setSkillGapLoading(
+          false
+        );
+      }
+    };
 
   const resetSkillGap = () => {
     setSkillGapResult(null);
     setRoadmapResult(null);
   };
 
-  // =========================
+  // ======================================================
   // ROADMAP
-  // =========================
+  // ======================================================
 
-  const generateRoadmap = async () => {
-    if (!skillGapResult) {
-      setActivePage("skills");
-      return;
-    }
-
-    try {
-      setRoadmapLoading(true);
-
-      const missingSkills = Array.isArray(
-        skillGapResult.missingSkills
-      )
-        ? skillGapResult.missingSkills
-          .map((skill) =>
-            getSkillName(skill)
-          )
-          .filter(Boolean)
-        : [];
-
-      const cleanCurrentSkills =
-        currentSkills
-          .map((skill) =>
-            getSkillName(skill)
-          )
-          .filter(Boolean);
-
-      const response = await fetch(
-        `${API_URL}/api/roadmap`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            targetRole:
-              typeof skillGapResult.targetRole ===
-                "string"
-                ? skillGapResult.targetRole
-                : skillGapRole,
-
-            currentSkills:
-              cleanCurrentSkills,
-
-            missingSkills:
-              missingSkills,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-          "Failed to generate roadmap."
-        );
+  const generateRoadmap =
+    async () => {
+      if (!skillGapResult) {
+        setActivePage("skills");
+        return;
       }
 
-      setRoadmapResult(data);
-      setActivePage("roadmap");
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setRoadmapLoading(false);
-    }
-  };
+      try {
+        setRoadmapLoading(
+          true
+        );
 
-  // =========================
+        const missingSkills =
+          Array.isArray(
+            skillGapResult.missingSkills
+          )
+            ? skillGapResult.missingSkills
+              .map((skill) =>
+                getSkillName(skill)
+              )
+              .filter(Boolean)
+            : [];
+
+        const cleanCurrentSkills =
+          currentSkills
+            .map((skill) =>
+              getSkillName(skill)
+            )
+            .filter(Boolean);
+
+        const data =
+          await apiRequest(
+            "/api/roadmap",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                targetRole:
+                  typeof skillGapResult.targetRole ===
+                    "string"
+                    ? skillGapResult.targetRole
+                    : skillGapRole,
+
+                currentSkills:
+                  cleanCurrentSkills,
+
+                missingSkills:
+                  missingSkills,
+              }),
+            }
+          );
+
+        setRoadmapResult(
+          data
+        );
+
+        setActivePage(
+          "roadmap"
+        );
+      } catch (error) {
+        console.error(
+          "Roadmap error:",
+          error
+        );
+
+        alert(
+          error.message ||
+          "Failed to generate roadmap."
+        );
+      } finally {
+        setRoadmapLoading(
+          false
+        );
+      }
+    };
+
+  // ======================================================
   // PROGRESS TRACKING
-  // =========================
+  // ======================================================
 
   const updateSkillProgress = (
     skillName,
     value
   ) => {
     const cleanName =
-      getSkillName(skillName);
+      getSkillName(
+        skillName
+      );
 
     if (!cleanName) return;
 
-    setSkillProgress((previous) => {
-      const updated = {
-        ...previous,
-        [cleanName]: Math.min(
-          100,
-          Math.max(0, Number(value))
-        ),
-      };
+    setSkillProgress(
+      (previous) => {
+        const updated = {
+          ...previous,
+          [cleanName]:
+            Math.min(
+              100,
+              Math.max(
+                0,
+                Number(value)
+              )
+            ),
+        };
 
-      localStorage.setItem(
-        "careerCopilotProgress",
-        JSON.stringify(updated)
+        localStorage.setItem(
+          "careerCopilotProgress",
+          JSON.stringify(
+            updated
+          )
+        );
+
+        return updated;
+      }
+    );
+  };
+
+  const getRoadmapProgress =
+    () => {
+      const values =
+        Object.values(
+          skillProgress
+        );
+
+      if (
+        values.length === 0
+      ) {
+        return 0;
+      }
+
+      return Math.round(
+        values.reduce(
+          (
+            sum,
+            value
+          ) =>
+            sum +
+            Number(value),
+          0
+        ) /
+        values.length
       );
+    };
 
-      return updated;
-    });
-  };
-
-  const getRoadmapProgress = () => {
-    const values = Object.values(
-      skillProgress
-    );
-
-    if (values.length === 0) {
-      return 0;
-    }
-
-    return Math.round(
-      values.reduce(
-        (sum, value) =>
-          sum + Number(value),
-        0
-      ) / values.length
-    );
-  };
-
-  // =========================
+  // ======================================================
   // INTERVIEW
-  // =========================
+  // ======================================================
 
   const generateInterviewQuestions =
     async () => {
       try {
-        setInterviewLoading(true);
+        setInterviewLoading(
+          true
+        );
 
-        setInterviewQuestions([]);
-        setCurrentQuestionIndex(0);
+        setInterviewQuestions(
+          []
+        );
+
+        setCurrentQuestionIndex(
+          0
+        );
+
         setUserAnswer("");
-        setEvaluationResult(null);
-        setInterviewScores([]);
 
-        const response = await fetch(
-          `${API_URL}/api/interview/questions?targetRole=${encodeURIComponent(
+        setEvaluationResult(
+          null
+        );
+
+        setInterviewScores(
+          []
+        );
+
+        const query =
+          `?targetRole=${encodeURIComponent(
             interviewRole
           )}&experience=${encodeURIComponent(
             interviewExperience
-          )}`
-        );
+          )}`;
 
         const data =
-          await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.message ||
-            "Failed to generate interview questions."
+          await apiRequest(
+            `/api/interview/questions${query}`
           );
-        }
 
         setInterviewQuestions(
-          Array.isArray(data.questions)
+          Array.isArray(
+            data.questions
+          )
             ? data.questions
             : []
         );
       } catch (error) {
-        alert(error.message);
+        console.error(
+          "Interview question error:",
+          error
+        );
+
+        alert(
+          error.message ||
+          "Failed to generate interview questions."
+        );
       } finally {
-        setInterviewLoading(false);
+        setInterviewLoading(
+          false
+        );
       }
     };
 
-  // =========================
+  // ======================================================
   // EVALUATE ANSWER
-  // =========================
+  // ======================================================
 
-  const evaluateAnswer = async () => {
-    if (!userAnswer.trim()) {
-      alert(
-        "Please write your answer first."
-      );
-      return;
-    }
+  const evaluateAnswer =
+    async () => {
+      if (
+        !userAnswer.trim()
+      ) {
+        alert(
+          "Please write your answer first."
+        );
+        return;
+      }
 
-    const currentQuestion =
-      interviewQuestions[
-      currentQuestionIndex
-      ];
+      const currentQuestion =
+        interviewQuestions[
+        currentQuestionIndex
+        ];
 
-    if (!currentQuestion) return;
+      if (!currentQuestion)
+        return;
 
-    try {
-      setEvaluationLoading(true);
+      try {
+        setEvaluationLoading(
+          true
+        );
 
-      const questionId =
-        currentQuestion &&
-          typeof currentQuestion ===
-          "object"
-          ? currentQuestion.id ||
-          currentQuestionIndex + 1
-          : currentQuestionIndex + 1;
+        const questionId =
+          currentQuestion &&
+            typeof currentQuestion ===
+            "object"
+            ? currentQuestion.id ||
+            currentQuestionIndex +
+            1
+            : currentQuestionIndex +
+            1;
 
-      const response = await fetch(
-        `${API_URL}/api/interview/evaluate`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            targetRole:
-              interviewRole,
-            questionId,
-            answer: userAnswer,
-          }),
+        const data =
+          await apiRequest(
+            "/api/interview/evaluate",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                targetRole:
+                  interviewRole,
+                questionId,
+                answer:
+                  userAnswer,
+              }),
+            }
+          );
+
+        setEvaluationResult(
+          data
+        );
+
+        if (
+          typeof data.score ===
+          "number"
+        ) {
+          setInterviewScores(
+            (previous) => [
+              ...previous,
+              data.score,
+            ]
+          );
         }
-      );
+      } catch (error) {
+        console.error(
+          "Answer evaluation error:",
+          error
+        );
 
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
+        alert(
+          error.message ||
           "Failed to evaluate answer."
         );
-      }
-
-      setEvaluationResult(data);
-
-      if (
-        typeof data.score ===
-        "number"
-      ) {
-        setInterviewScores(
-          (previous) => [
-            ...previous,
-            data.score,
-          ]
+      } finally {
+        setEvaluationLoading(
+          false
         );
       }
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setEvaluationLoading(false);
-    }
-  };
+    };
 
   const nextQuestion = () => {
     if (
       currentQuestionIndex <
-      interviewQuestions.length - 1
+      interviewQuestions.length -
+      1
     ) {
       setCurrentQuestionIndex(
         (previous) =>
@@ -650,52 +856,79 @@ function App() {
       );
 
       setUserAnswer("");
-      setEvaluationResult(null);
+
+      setEvaluationResult(
+        null
+      );
     }
   };
 
-  const previousQuestion = () => {
-    if (
-      currentQuestionIndex > 0
-    ) {
+  const previousQuestion =
+    () => {
+      if (
+        currentQuestionIndex >
+        0
+      ) {
+        setCurrentQuestionIndex(
+          (previous) =>
+            previous - 1
+        );
+
+        setUserAnswer("");
+
+        setEvaluationResult(
+          null
+        );
+      }
+    };
+
+  const restartInterview =
+    () => {
+      setInterviewQuestions(
+        []
+      );
+
       setCurrentQuestionIndex(
-        (previous) =>
-          previous - 1
+        0
       );
 
       setUserAnswer("");
-      setEvaluationResult(null);
-    }
-  };
 
-  const restartInterview = () => {
-    setInterviewQuestions([]);
-    setCurrentQuestionIndex(0);
-    setUserAnswer("");
-    setEvaluationResult(null);
-    setInterviewScores([]);
-  };
+      setEvaluationResult(
+        null
+      );
 
-  const getInterviewAverage = () => {
-    if (
-      interviewScores.length === 0
-    ) {
-      return 0;
-    }
+      setInterviewScores(
+        []
+      );
+    };
 
-    return Math.round(
-      interviewScores.reduce(
-        (sum, score) =>
-          sum + Number(score),
+  const getInterviewAverage =
+    () => {
+      if (
+        interviewScores.length ===
         0
-      ) /
-      interviewScores.length
-    );
-  };
+      ) {
+        return 0;
+      }
 
-  // =========================
+      return Math.round(
+        interviewScores.reduce(
+          (
+            sum,
+            score
+          ) =>
+            sum +
+            Number(score),
+          0
+        ) /
+        interviewScores.length
+      );
+    };
+
+  // ======================================================
   // CAREER READINESS
-  // =========================
+  // ======================================================
 
   const getResumeScore = () => {
     return Number(
@@ -703,113 +936,133 @@ function App() {
     );
   };
 
-  const getSkillMatchScore = () => {
-    return Number(
-      skillGapResult?.matchScore || 0
-    );
-  };
-
-  const getCareerReadiness = () => {
-    const resumeScore =
-      getResumeScore();
-
-    const skillScore =
-      getSkillMatchScore();
-
-    const roadmapScore =
-      getRoadmapProgress();
-
-    const interviewScore =
-      getInterviewAverage();
-
-    const activeScores = [];
-
-    if (resumeResult) {
-      activeScores.push({
-        score: resumeScore,
-        weight: 0.3,
-      });
-    }
-
-    if (skillGapResult) {
-      activeScores.push({
-        score: skillScore,
-        weight: 0.25,
-      });
-    }
-
-    if (
-      roadmapResult &&
-      Object.keys(skillProgress)
-        .length > 0
-    ) {
-      activeScores.push({
-        score: roadmapScore,
-        weight: 0.2,
-      });
-    }
-
-    if (
-      interviewScores.length > 0
-    ) {
-      activeScores.push({
-        score: interviewScore,
-        weight: 0.25,
-      });
-    }
-
-    if (activeScores.length === 0) {
-      return 0;
-    }
-
-    const totalWeight =
-      activeScores.reduce(
-        (sum, item) =>
-          sum + item.weight,
+  const getSkillMatchScore =
+    () => {
+      return Number(
+        skillGapResult?.matchScore ||
         0
       );
+    };
 
-    const weightedScore =
-      activeScores.reduce(
-        (sum, item) =>
-          sum +
-          item.score *
-          item.weight,
+  const getCareerReadiness =
+    () => {
+      const resumeScore =
+        getResumeScore();
+
+      const skillScore =
+        getSkillMatchScore();
+
+      const roadmapScore =
+        getRoadmapProgress();
+
+      const interviewScore =
+        getInterviewAverage();
+
+      const activeScores =
+        [];
+
+      if (resumeResult) {
+        activeScores.push({
+          score: resumeScore,
+          weight: 0.3,
+        });
+      }
+
+      if (skillGapResult) {
+        activeScores.push({
+          score: skillScore,
+          weight: 0.25,
+        });
+      }
+
+      if (
+        roadmapResult &&
+        Object.keys(
+          skillProgress
+        ).length > 0
+      ) {
+        activeScores.push({
+          score: roadmapScore,
+          weight: 0.2,
+        });
+      }
+
+      if (
+        interviewScores.length >
         0
+      ) {
+        activeScores.push({
+          score: interviewScore,
+          weight: 0.25,
+        });
+      }
+
+      if (
+        activeScores.length ===
+        0
+      ) {
+        return 0;
+      }
+
+      const totalWeight =
+        activeScores.reduce(
+          (
+            sum,
+            item
+          ) =>
+            sum +
+            item.weight,
+          0
+        );
+
+      const weightedScore =
+        activeScores.reduce(
+          (
+            sum,
+            item
+          ) =>
+            sum +
+            item.score *
+            item.weight,
+          0
+        );
+
+      return Math.round(
+        weightedScore /
+        totalWeight
       );
+    };
 
-    return Math.round(
-      weightedScore /
-      totalWeight
-    );
-  };
-
-  // =========================
+  // ======================================================
   // PROFILE
-  // =========================
+  // ======================================================
 
   const updateProfile = (
     field,
     value
   ) => {
-    setProfile((previous) => {
-      const updated = {
-        ...previous,
-        [field]: value,
-      };
+    setProfile(
+      (previous) => {
+        const updated = {
+          ...previous,
+          [field]: value,
+        };
 
-      localStorage.setItem(
-        "careerCopilotProfile",
-        JSON.stringify(updated)
-      );
+        localStorage.setItem(
+          "careerCopilotProfile",
+          JSON.stringify(
+            updated
+          )
+        );
 
-      return updated;
-    });
+        return updated;
+      }
+    );
   };
 
-  // =========================
-  // PAGE TITLE
-  // =========================
+  // ======================================================
+  // PAGE TITLES
+  // ======================================================
 
   const titles = {
     dashboard: {
@@ -821,19 +1074,22 @@ function App() {
     resume: {
       small:
         "AI-Powered Resume Review",
-      title: "Resume Analysis",
+      title:
+        "Resume Analysis",
     },
 
     skills: {
       small:
         "Discover What You Need to Learn",
-      title: "Skill Gap Analysis",
+      title:
+        "Skill Gap Analysis",
     },
 
     roadmap: {
       small:
         "Your Personalized Career Plan",
-      title: "Learning Roadmap",
+      title:
+        "Learning Roadmap",
     },
 
     interview: {
@@ -846,7 +1102,8 @@ function App() {
     profile: {
       small:
         "Manage Your Career Profile",
-      title: "My Profile",
+      title:
+        "My Profile",
     },
   };
 
@@ -854,18 +1111,19 @@ function App() {
     titles[activePage] ||
     titles.dashboard;
 
-  // =========================
+  // ======================================================
   // RENDER
-  // =========================
+  // ======================================================
 
   return (
     <div className="app">
 
-      {/* ================= SIDEBAR ================= */}
+      {/* SIDEBAR */}
 
       <aside className="sidebar">
 
         <div className="logo">
+
           <div className="logo-icon">
             AI
           </div>
@@ -879,6 +1137,7 @@ function App() {
               Your AI Career Guide
             </p>
           </div>
+
         </div>
 
         <nav>
@@ -989,13 +1248,14 @@ function App() {
 
       </aside>
 
-      {/* ================= MAIN ================= */}
+      {/* MAIN */}
 
       <main className="main-content">
 
         <header>
 
           <div>
+
             <p className="welcome">
               {pageTitle.small}
             </p>
@@ -1003,6 +1263,7 @@ function App() {
             <h1>
               {pageTitle.title}
             </h1>
+
           </div>
 
           <button
@@ -1022,7 +1283,9 @@ function App() {
 
         </header>
 
-        {/* ================= DASHBOARD ================= */}
+        {/* ==================================================
+            DASHBOARD
+        ================================================== */}
 
         {activePage ===
           "dashboard" && (
@@ -1085,8 +1348,9 @@ function App() {
                   <p>
                     Your overall career
                     readiness based on
-                    resume, skills, roadmap
-                    and interview performance.
+                    resume, skills,
+                    roadmap and
+                    interview performance.
                   </p>
 
                   <div className="score-components">
@@ -1095,6 +1359,7 @@ function App() {
                       <span>
                         Resume
                       </span>
+
                       <strong>
                         {getResumeScore()}%
                       </strong>
@@ -1104,6 +1369,7 @@ function App() {
                       <span>
                         Skills
                       </span>
+
                       <strong>
                         {getSkillMatchScore()}%
                       </strong>
@@ -1113,6 +1379,7 @@ function App() {
                       <span>
                         Roadmap
                       </span>
+
                       <strong>
                         {getRoadmapProgress()}%
                       </strong>
@@ -1122,6 +1389,7 @@ function App() {
                       <span>
                         Interview
                       </span>
+
                       <strong>
                         {getInterviewAverage()}%
                       </strong>
@@ -1140,6 +1408,7 @@ function App() {
                         `${getCareerReadiness()}%`,
                     }}
                   >
+
                     <strong>
                       {getCareerReadiness()}%
                     </strong>
@@ -1147,6 +1416,7 @@ function App() {
                     <span>
                       Ready
                     </span>
+
                   </div>
 
                 </div>
@@ -1158,6 +1428,7 @@ function App() {
               <section className="section-header">
 
                 <div>
+
                   <h2>
                     Your Career Tools
                   </h2>
@@ -1166,6 +1437,7 @@ function App() {
                     Everything you need
                     to move forward.
                   </p>
+
                 </div>
 
               </section>
@@ -1210,7 +1482,9 @@ function App() {
             </>
           )}
 
-        {/* ================= RESUME ================= */}
+        {/* ==================================================
+            RESUME
+        ================================================== */}
 
         {activePage ===
           "resume" && (
@@ -1228,6 +1502,7 @@ function App() {
                       </div>
 
                       <div>
+
                         <h2>
                           Upload Your Resume
                         </h2>
@@ -1237,6 +1512,7 @@ function App() {
                           and get AI-powered
                           feedback.
                         </p>
+
                       </div>
 
                     </div>
@@ -1288,7 +1564,8 @@ function App() {
                         value={targetRole}
                         onChange={(event) =>
                           setTargetRole(
-                            event.target.value
+                            event.target
+                              .value
                           )
                         }
                       >
@@ -1317,7 +1594,8 @@ function App() {
                         value={experience}
                         onChange={(event) =>
                           setExperience(
-                            event.target.value
+                            event.target
+                              .value
                           )
                         }
                       >
@@ -1355,55 +1633,79 @@ function App() {
                     </h3>
 
                     <div className="analysis-info-item">
+
                       <span>🎯</span>
+
                       <div>
+
                         <h4>
                           Role Match
                         </h4>
+
                         <p>
                           Compare your profile
                           with your target role.
                         </p>
+
                       </div>
+
                     </div>
 
                     <div className="analysis-info-item">
+
                       <span>💪</span>
+
                       <div>
+
                         <h4>
                           Strengths
                         </h4>
+
                         <p>
                           Discover your strongest
                           skills.
                         </p>
+
                       </div>
+
                     </div>
 
                     <div className="analysis-info-item">
+
                       <span>📈</span>
+
                       <div>
+
                         <h4>
                           Skill Gaps
                         </h4>
+
                         <p>
                           Find skills you need
                           to learn.
                         </p>
+
                       </div>
+
                     </div>
 
                     <div className="analysis-info-item">
+
                       <span>🗺️</span>
+
                       <div>
+
                         <h4>
                           Roadmap
                         </h4>
+
                         <p>
                           Build your personalized
                           learning journey.
                         </p>
+
                       </div>
+
                     </div>
 
                   </div>
@@ -1416,6 +1718,7 @@ function App() {
                   <div className="result-top">
 
                     <div>
+
                       <p>
                         Analysis Complete ✨
                       </p>
@@ -1433,6 +1736,7 @@ function App() {
                             targetRole}
                         </strong>
                       </p>
+
                     </div>
 
                     <button
@@ -1464,6 +1768,7 @@ function App() {
                     </div>
 
                     <div>
+
                       <h2>
                         Resume Match Score
                       </h2>
@@ -1473,6 +1778,7 @@ function App() {
                         analyzed based on your
                         skills and target career.
                       </p>
+
                     </div>
 
                   </div>
@@ -1486,29 +1792,36 @@ function App() {
                       </h3>
 
                       <ul>
+
                         {Array.isArray(
                           resumeResult.strengths
                         ) &&
                           resumeResult
+                            .strengths.length >
+                          0 ? (
+                          resumeResult
                             .strengths
-                            .length > 0 ? (
-                          resumeResult.strengths.map(
-                            (item, index) => (
-                              <li
-                                key={`strength-${index}`}
-                              >
-                                {getText(
-                                  item
-                                )}
-                              </li>
+                            .map(
+                              (
+                                item,
+                                index
+                              ) => (
+                                <li
+                                  key={`strength-${index}`}
+                                >
+                                  {getText(
+                                    item
+                                  )}
+                                </li>
+                              )
                             )
-                          )
                         ) : (
                           <li>
                             No strengths
                             data available.
                           </li>
                         )}
+
                       </ul>
 
                     </div>
@@ -1520,12 +1833,14 @@ function App() {
                       </h3>
 
                       <ul>
+
                         {Array.isArray(
                           resumeResult.areasToImprove
                         ) &&
                           resumeResult
                             .areasToImprove
-                            .length > 0 ? (
+                            .length >
+                          0 ? (
                           resumeResult
                             .areasToImprove
                             .map(
@@ -1549,6 +1864,7 @@ function App() {
                             available.
                           </li>
                         )}
+
                       </ul>
 
                     </div>
@@ -1566,7 +1882,8 @@ function App() {
                         ) &&
                           resumeResult
                             .detectedSkills
-                            .length > 0 ? (
+                            .length >
+                          0 ? (
                           resumeResult
                             .detectedSkills
                             .map(
@@ -1601,6 +1918,7 @@ function App() {
                   <div className="next-step-card">
 
                     <div>
+
                       <h2>
                         🎯 Ready to Find
                         Your Skill Gap?
@@ -1611,6 +1929,7 @@ function App() {
                         use the skills detected
                         from your resume.
                       </p>
+
                     </div>
 
                     <button
@@ -1630,7 +1949,9 @@ function App() {
             </>
           )}
 
-        {/* ================= SKILL GAP ================= */}
+        {/* ==================================================
+            SKILL GAP
+        ================================================== */}
 
         {activePage ===
           "skills" && (
@@ -1646,6 +1967,7 @@ function App() {
                     </div>
 
                     <div>
+
                       <h2>
                         Discover Your Skill Gap
                       </h2>
@@ -1655,6 +1977,7 @@ function App() {
                         skills with your target
                         career role.
                       </p>
+
                     </div>
 
                   </div>
@@ -1671,7 +1994,8 @@ function App() {
                         value={skillGapRole}
                         onChange={(event) =>
                           setSkillGapRole(
-                            event.target.value
+                            event.target
+                              .value
                           )
                         }
                       >
@@ -1704,7 +2028,8 @@ function App() {
                           value={newSkill}
                           onChange={(event) =>
                             setNewSkill(
-                              event.target.value
+                              event.target
+                                .value
                             )
                           }
                           onKeyDown={(event) => {
@@ -1769,9 +2094,11 @@ function App() {
                         )
                       ) : (
                         <div className="empty-skills">
+
                           <p>
                             No skills added yet.
                           </p>
+
                         </div>
                       )}
 
@@ -1801,6 +2128,7 @@ function App() {
                   <div className="result-top">
 
                     <div>
+
                       <p>
                         Skill Analysis
                         Complete ✨
@@ -1819,6 +2147,7 @@ function App() {
                             skillGapRole}
                         </strong>
                       </p>
+
                     </div>
 
                     <button
@@ -1851,6 +2180,7 @@ function App() {
                     </div>
 
                     <div>
+
                       <h2>
                         Your Current Skill Match
                       </h2>
@@ -1879,6 +2209,7 @@ function App() {
                         )}{" "}
                         required skills.
                       </p>
+
                     </div>
 
                   </div>
@@ -1898,7 +2229,8 @@ function App() {
                         ) &&
                           skillGapResult
                             .matchedSkills
-                            .length > 0 ? (
+                            .length >
+                          0 ? (
                           skillGapResult
                             .matchedSkills
                             .map(
@@ -1940,7 +2272,8 @@ function App() {
                         ) &&
                           skillGapResult
                             .missingSkills
-                            .length > 0 ? (
+                            .length >
+                          0 ? (
 
                           skillGapResult
                             .missingSkills
@@ -1973,6 +2306,7 @@ function App() {
                                   >
 
                                     <div>
+
                                       <strong>
                                         {skillName}
                                       </strong>
@@ -1982,6 +2316,7 @@ function App() {
                                           reason
                                         )}
                                       </p>
+
                                     </div>
 
                                     <span
@@ -2017,6 +2352,7 @@ function App() {
                   <div className="next-step-card">
 
                     <div>
+
                       <h2>
                         🗺️ Ready for Your
                         Learning Roadmap?
@@ -2027,6 +2363,7 @@ function App() {
                         roadmap based on your
                         missing skills.
                       </p>
+
                     </div>
 
                     <button
@@ -2051,7 +2388,9 @@ function App() {
             </>
           )}
 
-        {/* ================= ROADMAP ================= */}
+        {/* ==================================================
+            ROADMAP
+        ================================================== */}
 
         {activePage ===
           "roadmap" && (
@@ -2116,6 +2455,7 @@ function App() {
                     <div className="roadmap-stats">
 
                       <div className="roadmap-stat">
+
                         <strong>
                           {roadmapResult
                             .totalPhases ??
@@ -2134,9 +2474,11 @@ function App() {
                         <span>
                           Phases
                         </span>
+
                       </div>
 
                       <div className="roadmap-stat">
+
                         <strong>
                           {roadmapResult
                             .totalSkillsToLearn ??
@@ -2146,9 +2488,11 @@ function App() {
                         <span>
                           Skills to Learn
                         </span>
+
                       </div>
 
                       <div className="roadmap-stat">
+
                         <strong>
                           {getRoadmapProgress()}%
                         </strong>
@@ -2156,6 +2500,7 @@ function App() {
                         <span>
                           Progress
                         </span>
+
                       </div>
 
                     </div>
@@ -2168,8 +2513,8 @@ function App() {
                       roadmapResult.phases
                     ) &&
                       roadmapResult
-                        .phases
-                        .length > 0 ? (
+                        .phases.length >
+                      0 ? (
 
                       roadmapResult.phases.map(
                         (
@@ -2223,8 +2568,7 @@ function App() {
                                 {Array.isArray(
                                   phase?.skills
                                 ) &&
-                                  phase
-                                    .skills
+                                  phase.skills
                                     .length >
                                   0 ? (
 
@@ -2338,8 +2682,6 @@ function App() {
                                               </div>
                                             )}
 
-                                          {/* PROGRESS */}
-
                                           <div className="progress-section">
 
                                             <div className="progress-header">
@@ -2434,10 +2776,12 @@ function App() {
                     ) : (
 
                       <div className="roadmap-empty">
+
                         <p>
                           No roadmap phases
                           were generated.
                         </p>
+
                       </div>
 
                     )}
@@ -2450,7 +2794,9 @@ function App() {
             </section>
           )}
 
-        {/* ================= INTERVIEW ================= */}
+        {/* ==================================================
+            INTERVIEW
+        ================================================== */}
 
         {activePage ===
           "interview" && (
@@ -2468,6 +2814,7 @@ function App() {
                     </div>
 
                     <div>
+
                       <h2>
                         AI Interview
                         Preparation
@@ -2479,6 +2826,7 @@ function App() {
                         feedback on your
                         answers.
                       </p>
+
                     </div>
 
                   </div>
@@ -2497,10 +2845,12 @@ function App() {
                         }
                         onChange={(event) =>
                           setInterviewRole(
-                            event.target.value
+                            event.target
+                              .value
                           )
                         }
                       >
+
                         <option>
                           AI Product Manager
                         </option>
@@ -2512,6 +2862,7 @@ function App() {
                         <option>
                           Frontend Developer
                         </option>
+
                       </select>
 
                     </div>
@@ -2533,6 +2884,7 @@ function App() {
                           )
                         }
                       >
+
                         <option>
                           Fresher
                         </option>
@@ -2540,6 +2892,7 @@ function App() {
                         <option>
                           Intermediate
                         </option>
+
                       </select>
 
                     </div>
@@ -2575,8 +2928,7 @@ function App() {
                       </p>
 
                       <h2>
-                        {interviewRole}
-                        {" "}
+                        {interviewRole}{" "}
                         Interview
                       </h2>
 
@@ -2616,11 +2968,13 @@ function App() {
                           </div>
 
                           <h2 className="interview-question">
+
                             {getQuestionText(
                               interviewQuestions[
                               currentQuestionIndex
                               ]
                             )}
+
                           </h2>
 
                           <div className="form-group">
@@ -2848,6 +3202,7 @@ function App() {
                         </div>
 
                       </>
+
                     )}
 
                 </>
@@ -2857,7 +3212,9 @@ function App() {
             </section>
           )}
 
-        {/* ================= PROFILE ================= */}
+        {/* ==================================================
+            PROFILE
+        ================================================== */}
 
         {activePage ===
           "profile" && (
@@ -2870,6 +3227,7 @@ function App() {
                 </div>
 
                 <div>
+
                   <h2>
                     Your Career Profile
                   </h2>
@@ -2879,6 +3237,7 @@ function App() {
                     Career Copilot
                     experience.
                   </p>
+
                 </div>
 
               </div>
@@ -2886,11 +3245,13 @@ function App() {
               <div className="profile-card">
 
                 <div className="profile-avatar">
+
                   {profile.name
                     ? profile.name
                       .charAt(0)
                       .toUpperCase()
                     : "N"}
+
                 </div>
 
                 <div className="form-group">
@@ -2934,6 +3295,7 @@ function App() {
                       )
                     }
                   >
+
                     <option>
                       AI Product Manager
                     </option>
@@ -2945,6 +3307,7 @@ function App() {
                     <option>
                       Frontend Developer
                     </option>
+
                   </select>
 
                 </div>
@@ -2967,6 +3330,7 @@ function App() {
                       )
                     }
                   >
+
                     <option>
                       Fresher
                     </option>
@@ -3006,6 +3370,7 @@ function App() {
           )}
 
       </main>
+
     </div>
   );
 }
