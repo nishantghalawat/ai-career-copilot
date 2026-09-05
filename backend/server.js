@@ -13,9 +13,30 @@ const PORT = process.env.PORT || 5000;
    MIDDLEWARE
 ===================================================== */
 
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://ai-career-copilot-wheat.vercel.app"
+];
+
 app.use(
     cors({
-        origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+        origin: function (origin, callback) {
+
+            // Allow requests with no origin
+            // (for example Postman/server-to-server)
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            return callback(
+                new Error("Not allowed by CORS")
+            );
+        },
         methods: ["GET", "POST", "OPTIONS"],
         allowedHeaders: ["Content-Type"],
     })
@@ -188,6 +209,7 @@ app.post("/api/analyze-resume", upload.any(), async (req, res) => {
     try {
         console.log("\n===== RESUME ANALYSIS REQUEST =====");
 
+        console.log("Origin:", req.headers.origin);
         console.log("Body:", req.body);
 
         const targetRole =
